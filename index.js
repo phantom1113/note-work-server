@@ -1,18 +1,19 @@
-require('dotenv').config()
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 var bodyParser = require('body-parser')
 const Posts = require('./route/api/post');
-const Auth = require('./route/api/auth')
+const Auth = require('./route/api/auth');
+const Comment = require('./route/api/comment');
 
 const port = 3000
 
 const app = express();
 
 app.use(cors());
-app.use(bodyParser.urlencoded({extended: true})) 
-app.use(bodyParser.json()) 
+app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.json()) ;
 
 
 //Connect to MongoDB
@@ -27,6 +28,7 @@ mongoose
     
 app.use('/api/posts', Posts);
 app.use('/api/auth', Auth);
+app.use('/api/comment', Comment);
 
 
 
