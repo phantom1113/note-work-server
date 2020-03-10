@@ -20,7 +20,7 @@ router.post('/', (req,res) => {
     const user = checkAuth(context);
     let { body } = req.body
     if (body.trim() === '') {
-        throw new Error('Post body must no be empty');
+        return res.status(400).json({ errors: 'Post body is not empty' });
     }
 
     const newPost = new Post({
@@ -47,6 +47,7 @@ router.get('/:postId', (req,res) => {
 
 })
 
+
 //Delete post 
 router.delete('/:postId', (req,res) => {
     let postId = req.params.postId
@@ -55,7 +56,6 @@ router.delete('/:postId', (req,res) => {
 
     try {
         Post.findById(postId).then(post => {
-            console.log(user.username, post)
             if (user.username === post.username) {
                 post.delete();
                 res.json('Post deleted sucessfully');
@@ -76,7 +76,7 @@ router.post('/:postId', async (req, res) => {
     let postId = req.params.postId
     let context = req.headers.authorization
     const { username } = checkAuth(context);
-
+    
     const post = await Post.findById(postId);
     if (post) {
         if (post.likes.find(like => like.username === username)) {

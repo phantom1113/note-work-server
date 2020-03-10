@@ -12,7 +12,7 @@ router.post('/', async (req, res) => {
         let { body, postId } = req.body;
         const { username } = checkAuth(context);
         if (body.trim() === '') {
-            return res.json('Empty comment');
+            return res.status(400).json({ errors: 'Comment body is not empty' });
         }
         const post = await Post.findById(postId);
         if (post) {
@@ -29,20 +29,47 @@ router.post('/', async (req, res) => {
     }
 })
 
-//Delete comment post
-router.post('/:idComment', async (req, res) => {
+//Adjust comment post
+router.put('/:commentId', async (req, res) => {
     try {
-        let commentId = req.params.idComment;
+        let commentId = req.params.commentId;
+        let { body } = req.body.body;
+        let context = req.headers.authorization;
+        let postId = req.body.postId;
+        if (body.trim() === '') {
+            return res.status(400).json({ errors: 'Comment body is not empty' });
+        }
+        const { username } = checkAuth(context);
+        const post = await Post.findById(postId);
+        if (post) {
+            const commentIndex = post.comments.findIndex(c => String(c._id) === commentId)
+            if (post.comments[commentIndex].username === username) {
+                post.comments[commentIndex].body = body
+                await post.save();
+                res.json(post);
+            } else {
+                throw new Error('Action not allowed');
+            }
+        } else {
+            throw new Error('Post not found');
+        }
+    } catch (err) {
+        throw new Error(err)
+    }
+})
+
+//Delete comment post
+router.post('/:commentId', async (req, res) => {
+    try {
+        let commentId = req.params.commentId;
         let context = req.headers.authorization;
         let postId = req.body.postId;
 
         const { username } = checkAuth(context);
 
         const post = await Post.findById(postId);
-
         if (post) {
-            const commentIndex = post.comments.findIndex(c => c.id === commentId)
-
+            const commentIndex = post.comments.findIndex(c => String(c._id) === commentId)
             if (post.comments[commentIndex].username === username) {
                 post.comments.splice(commentIndex, 1)
                 await post.save();

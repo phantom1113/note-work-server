@@ -25,18 +25,18 @@ router.post('/login', (req, res) => {
     const { email, password } = req.body;
     //Simple validation
     if (!email || !password) {
-        return res.status(400).json({ msg: 'Please enter all fields' });
+        return res.status(400).json({ errors: 'Please enter all fields' });
     }
 
     //Check for existing user
     User.findOne({ email })
         .then(user => {
-            if (!user) return res.status(400).json({ msg: 'User does not exists' })
+            if (!user) return res.status(400).json({ errors: 'User does not exists' })
 
             //Validate password
             bcrypt.compare(password, user.password)
                 .then(isMatch => {
-                    if (!isMatch) return res.status(400).json({ msg: 'Password is wrong !!!' })
+                    if (!isMatch) return res.status(400).json({ errors: 'Password is wrong !!!' })
                     jwt.sign(
                         {
                             id: user.id,
@@ -69,12 +69,12 @@ router.post('/register', async (req, res) => {
         //Validate user data
         const { valid, errors } = validateRegisterInput(username, email, password, confirmPassword);
         if (!valid) {
-            return res.json({ errors: errors })
+            return res.status(400).json({ errors: errors })
         }
         //Make sure user doesnt already exist
-        const user = await User.findOne({ username });
+        const user = await User.findOne({ email });
         if (user) {
-            return res.json({ errors: "User are taken" })
+            return res.status(400).json({ errors: {usertaken:"User are taken"} })
         }
         //hash password and create an auth token
         password = await bcrypt.hash(password, 12);
