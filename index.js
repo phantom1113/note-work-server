@@ -1,5 +1,7 @@
 require('dotenv').config();
 const express = require('express');
+const socketio = require('socket.io');
+var http= require('http')
 const mongoose = require('mongoose');
 var bodyParser = require('body-parser')
 const Posts = require('./route/api/post');
@@ -11,7 +13,8 @@ const cors = require('cors');
 const port = 5000
 
 const app = express();
-
+const server = http.createServer(app);
+const io = socketio(server);
 
 app.use(cors())
 app.use(bodyParser.urlencoded({extended: true}));
@@ -32,7 +35,16 @@ app.use('/api/posts', Posts);
 app.use('/api/auth', Auth);
 app.use('/api/comment', Comment);
 
+io.on('connection', function (socket) {
+    console.log('Connected')
+    socket.on('like event',() => {
+        socket.broadcast.emit('like event from another client')
+    });
+    socket.on('commnet event',(data) => {
+        socket.broadcast.emit('comment event from another client',data)
+    });
+});
 
 
 
-app.listen(port, () => console.log(`Server listening on port ${port}!`))
+server.listen(port, () => console.log(`Server listening on port ${port}!`))
