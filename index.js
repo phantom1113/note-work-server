@@ -37,8 +37,8 @@ app.use('/api/comment', Comment);
 
 io.on('connection', function (socket) {
     console.log('Connected')
-    socket.on('like event',() => {
-        socket.broadcast.emit('like event from another client')
+    socket.on('like event',(data) => {
+        socket.broadcast.emit('like event from another client',data)
     });
     socket.on('commnet event',(data) => {
         socket.broadcast.emit('comment event from another client',data)
