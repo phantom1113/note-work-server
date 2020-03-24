@@ -22,11 +22,12 @@ router.post('/', (req,res) => {
     if (body.trim() === '') {
         return res.status(400).json({ errors: 'Post body is not empty' });
     }
-
+    
     const newPost = new Post({
         body,
         user: user.indexOf,
         username: user.username,
+        urlAvatar: user.urlAvatar,
         createdAt: new Date().toISOString()
     })
 

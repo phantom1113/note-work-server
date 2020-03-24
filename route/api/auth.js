@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { validateRegisterInput, validateLoginInput } = require('../../ultils/validator');
+const checkAuth = require('../../ultils/checkAuth');
 
 require('dotenv').config()
 //User Model
@@ -13,7 +14,8 @@ function generalToken(user) {
         {
             id: user.id,
             email: user.email,
-            username: user.username
+            username: user.username,
+            urlAvatar: user.urlAvatar
         },
         process.env.jwtSecret,
         { expiresIn: '1h' }
@@ -41,7 +43,8 @@ router.post('/login', (req, res) => {
                         {
                             id: user.id,
                             email: user.email,
-                            username: user.username
+                            username: user.username,
+                            urlAvatar: user.urlAvatar
                         },
                         process.env.jwtSecret,
                         { expiresIn: 3600 },
@@ -65,7 +68,8 @@ router.post('/login', (req, res) => {
 //Register
 router.post('/register', async (req, res) => {
     try {
-        let { username, email, password, confirmPassword } = req.body
+        let { username, email, password, confirmPassword, urlAvatar } = req.body
+        console.log(req.body)
         //Validate user data
         const { valid, errors } = validateRegisterInput(username, email, password, confirmPassword);
         if (!valid) {
@@ -74,7 +78,7 @@ router.post('/register', async (req, res) => {
         //Make sure user doesnt already exist
         const user = await User.findOne({ email });
         if (user) {
-            return res.status(400).json({ errors: {usertaken:"User are taken"} })
+            return res.status(400).json({ errors: { usertaken: "User are taken" } })
         }
         //hash password and create an auth token
         password = await bcrypt.hash(password, 12);
@@ -83,7 +87,8 @@ router.post('/register', async (req, res) => {
             email,
             username,
             password,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            urlAvatar
         });
         const userRegister = await newUser.save();
         const token = generalToken(userRegister)
@@ -93,7 +98,24 @@ router.post('/register', async (req, res) => {
             id: res._id,
             token
         });
-    } catch(err) {
+    } catch (err) {
+        return res.json({ errors: err })
+    }
+})
+
+router.post('/loaduser', async (req, res) => {
+    try {
+        let { token } = req.body;
+        const {email} = checkAuth(token);
+        User.findOne({ email })
+        .then(user=>{
+            return res.json({
+                email: user.email,
+                username: user.username,
+                urlAvatar: user.urlAvatar
+            });
+        })
+    } catch (err) {
         return res.json({ errors: err })
     }
 })
